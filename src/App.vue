@@ -1,17 +1,62 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
+import PublisherVideo from "./components/PublisherVideo.vue";
+import { nowInSec, SkyWayAuthToken, uuidV4 } from "@skyway-sdk/room";
+import { onMounted, provide } from "vue";
+const skyWayToken = new SkyWayAuthToken({
+  jti: uuidV4(),
+  iat: nowInSec(),
+  exp: nowInSec() + 60 * 60 * 24,
+  scope: {
+    app: {
+      id: import.meta.env.VITE_SKYWAY_APP_ID,
+      turn: true,
+      actions: ["read"],
+      channels: [
+        {
+          id: "*",
+          name: "*",
+          actions: ["write"],
+          members: [
+            {
+              id: "*",
+              name: "*",
+              actions: ["write"],
+              publication: {
+                actions: ["write"],
+              },
+              subscription: {
+                actions: ["write"],
+              },
+            },
+          ],
+          sfuBots: [
+            {
+              actions: ["write"],
+              forwardings: [
+                {
+                  actions: ["write"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
+}).encode(import.meta.env.VITE_SKYWAY_SECRET_KEY);
+
+onMounted(() => {
+  provide("skyWayToken", skyWayToken);
+});
 </script>
 
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
+  <v-row>
+    <v-col cols="6">
+      <publisher-video />
+    </v-col>
+    <v-col cols="6"> </v-col>
+  </v-row>
 </template>
 
 <style scoped>
