@@ -1,5 +1,6 @@
 <script setup>
 import PublisherVideo from "./components/PublisherVideo.vue";
+import SubscriberView from "./components/SubscriberView.vue";
 import { nowInSec, SkyWayAuthToken, uuidV4 } from "@skyway-sdk/room";
 import { onMounted, provide } from "vue";
 const skyWayToken = new SkyWayAuthToken({
@@ -55,7 +56,9 @@ onMounted(() => {
     <v-col cols="6">
       <publisher-video />
     </v-col>
-    <v-col cols="6"> </v-col>
+    <v-col cols="6">
+      <subscriber-view />
+    </v-col>
   </v-row>
 </template>
 
