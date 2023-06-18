@@ -6,21 +6,22 @@ import {
   SkyWayRoom,
   SkyWayStreamFactory,
 } from "@skyway-sdk/room";
-import { computed, inject, ref } from "vue";
+import { computed, inject, onMounted, ref } from "vue";
 
 const roomId = ref("None");
 const roomName = ref("");
 const hasRoomName = computed(() => roomName.value.length > 0);
 
-const skyWayToken = inject("skyWayToken");
+let skyWayToken;
 const localVideo = ref(null);
+let context;
 const startPublication = async () => {
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     const { audio, video } =
       await SkyWayStreamFactory.createMicrophoneAudioAndCameraStream();
     video.attach(localVideo.value.video);
 
-    const context = await SkyWayContext.Create(skyWayToken);
+    context = await SkyWayContext.Create(skyWayToken);
 
     const room = await SkyWayRoom.FindOrCreate(context, {
       type: "p2p",
@@ -34,8 +35,17 @@ const startPublication = async () => {
     roomId.value = room.id;
   }
 };
+
+onMounted(() => {
+  skyWayToken = inject("skyWayToken", null);
+});
+
 const onClickCreate = async () => {
   await startPublication();
+};
+
+const onClickLeave = () => {
+  context.dispose();
 };
 </script>
 
@@ -44,6 +54,7 @@ const onClickCreate = async () => {
   <v-text-field type="text" label="Room Name" v-model="roomName" />
   <v-label>Room ID: {{ roomId }}</v-label>
   <base-button label="Create" @click="onClickCreate" :disabled="!hasRoomName" />
+  <base-button label="Leave" @click="onClickLeave" />
 </template>
 
 <style scoped></style>

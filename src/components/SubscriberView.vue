@@ -1,17 +1,18 @@
 <script setup>
 import SkyBoardVideo from "./SkyBoardVideo.vue";
 import BaseButton from "./BaseButton.vue";
-import { computed, inject, ref } from "vue";
+import { computed, inject, onMounted, ref } from "vue";
 import { SkyWayContext, SkyWayRoom } from "@skyway-sdk/room";
 
 const roomName = ref("");
 const hasRoomName = computed(() => roomName.value.length > 0);
 
-const skyWayToken = inject("skyWayToken", null);
+let skyWayToken;
 const remoteVideo = ref(null);
+let context;
 
 const startSubscription = async () => {
-  const context = await SkyWayContext.Create(skyWayToken);
+  context = await SkyWayContext.Create(skyWayToken);
   console.debug(context);
 
   const room = await SkyWayRoom.Find(
@@ -35,8 +36,16 @@ const startSubscription = async () => {
   });
 };
 
+onMounted(() => {
+  skyWayToken = inject("skyWayToken", null);
+});
+
 const onClickSubscribe = async () => {
   await startSubscription();
+};
+
+const onClickLeave = () => {
+  context.dispose();
 };
 </script>
 
@@ -48,6 +57,7 @@ const onClickSubscribe = async () => {
     @click="onClickSubscribe"
     :disabled="!hasRoomName"
   />
+  <base-button label="Leave" @click="onClickLeave" />
 </template>
 
 <style scoped></style>
