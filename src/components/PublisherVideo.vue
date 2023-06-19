@@ -1,6 +1,7 @@
 <script setup>
 import SkyBoardVideo from "./SkyBoardVideo.vue";
 import BaseButton from "./BaseButton.vue";
+import CommentColumn from "./CommentColumn.vue";
 import {
   nowInSec,
   SkyWayAuthToken,
@@ -9,14 +10,16 @@ import {
   SkyWayStreamFactory,
   uuidV4,
 } from "@skyway-sdk/room";
-import { computed, inject, onMounted, ref } from "vue";
+import { computed, inject, onMounted, onUnmounted, ref } from "vue";
 
 const roomId = ref("None");
 const roomName = ref("");
+let room;
 const hasRoomName = computed(() => roomName.value.length > 0);
 
 const localVideo = ref(null);
 let context;
+const comments = ref([]);
 const skyWayToken = new SkyWayAuthToken({
   jti: uuidV4(),
   iat: nowInSec(),
@@ -60,21 +63,15 @@ const skyWayToken = new SkyWayAuthToken({
   },
 }).encode(import.meta.env.VITE_SKYWAY_SECRET_KEY);
 
-const items = ref(Array.from({ length: 100000 }).map((_, i) => i));
-const comment = ref("");
-let data;
-
 const startPublication = async () => {
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     const { audio, video } =
       await SkyWayStreamFactory.createMicrophoneAudioAndCameraStream();
     video.attach(localVideo.value.video);
 
-    data = await SkyWayStreamFactory.createDataStream();
-
     context = await SkyWayContext.Create(skyWayToken);
 
-    const room = await SkyWayRoom.FindOrCreate(context, {
+    room = await SkyWayRoom.FindOrCreate(context, {
       type: "p2p",
       name: roomName.value,
     });
@@ -82,9 +79,22 @@ const startPublication = async () => {
     const me = await room.join();
     await me.publish(audio);
     await me.publish(video);
-    await me.publish(data);
 
     roomId.value = room.id;
+    room.onStreamPublished.add(async (e) => {
+      const { stream } = await me.subscribe(e.publication.id);
+      if (stream) {
+        if (stream.contentType === "data") {
+          stream.onData.add((comment) => {
+            comments.value.push(comment);
+          });
+        }
+      }
+    });
+
+    room.onMemberLeft.add((e) => {
+      console.log("onMemberListChanged", e);
+    });
   }
 };
 
@@ -99,10 +109,12 @@ const onClickCreate = async () => {
 const onClickLeave = () => {
   context.dispose();
 };
-const onClickSend = async () => {
-  const timestamp = new Date().toLocaleString();
-  data.write(`${timestamp} ${comment.value}`);
-};
+
+onUnmounted(async () => {
+  if (room) {
+    await room.close();
+  }
+});
 </script>
 
 <template>
@@ -111,8 +123,7 @@ const onClickSend = async () => {
   <v-label>Room ID: {{ roomId }}</v-label>
   <base-button label="Create" @click="onClickCreate" :disabled="!hasRoomName" />
   <base-button label="Leave" @click="onClickLeave" />
-  <v-text-field type="text" label="comment" v-model="comment" />
-  <base-button label="Send" @click="onClickSend" />
+  <comment-column :comments="comments" />
 </template>
 
 <style scoped></style>

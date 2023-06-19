@@ -1,7 +1,9 @@
 <script setup>
 import SkyBoardVideo from "./SkyBoardVideo.vue";
 import BaseButton from "./BaseButton.vue";
-import { computed, inject, onMounted, ref } from "vue";
+import CommentFormSend from "./CommentFormSend.vue";
+import CommentColumn from "./CommentColumn.vue";
+import { computed, inject, onMounted, onUnmounted, ref } from "vue";
 import {
   nowInSec,
   SkyWayAuthToken,
@@ -12,6 +14,8 @@ import {
 } from "@skyway-sdk/room";
 
 const roomName = ref("");
+let room;
+let me;
 const hasRoomName = computed(() => roomName.value.length > 0);
 
 const skyWayToken = new SkyWayAuthToken({
@@ -57,42 +61,60 @@ const skyWayToken = new SkyWayAuthToken({
   },
 }).encode(import.meta.env.VITE_SKYWAY_SECRET_KEY);
 const remoteVideo = ref(null);
+const comments = ref([]);
 let context;
-const comment = ref("");
 let data;
-const items = ref([]);
 
 const startSubscription = async () => {
   context = await SkyWayContext.Create(skyWayToken);
 
-  const room = await SkyWayRoom.Find(
+  room = await SkyWayRoom.Find(
     context,
     {
       name: roomName.value,
     },
     "p2p"
   );
-  const me = await room.join();
-
-  for (const publication of room.publications) {
-    const { stream } = await me.subscribe(publication.id);
-    if (publication.contentType === "video") {
-      stream.attach(remoteVideo.value.video);
-    } else if (publication.contentType === "audio") {
-      stream.attach(remoteVideo.value.video);
-    } else if (publication.contentType === "data") {
-      data = stream;
-      stream.onData.add((e) => {
-        items.value.push(e);
-      });
-    }
-  }
+  me = await room.join();
 
   room.onStreamPublished.add(async (e) => {
-    console.log(e);
-    const { stream } = await me.subscribe(e.publication.id);
-    stream.attach(remoteVideo.value.video);
+    if (e.publication.contentType === "data") {
+      const { stream } = await me.subscribe(e.publication.id);
+      if (stream) {
+        stream.onData.add((comment) => {
+          comments.value.push(comment);
+        });
+      }
+    }
   });
+
+  data = await SkyWayStreamFactory.createDataStream(context);
+  await me.publish(data);
+
+  let subscribedVideo = false;
+  let subscribedAudio = false;
+  for (const publication of room.publications.filter((publication) => {
+    return publication.publisher.id !== me.id;
+  })) {
+    if (publication.state === "enabled") {
+      try {
+        const { stream } = await me.subscribe(publication.id);
+        if (publication.contentType === "video" && !subscribedVideo) {
+          stream.attach(remoteVideo.value.video);
+          subscribedVideo = true;
+        } else if (publication.contentType === "audio" && !subscribedAudio) {
+          stream.attach(remoteVideo.value.video);
+          subscribedAudio = true;
+        } else if (publication.contentType === "data") {
+          stream.onData.add((comment) => {
+            comments.value.push(comment);
+          });
+        }
+      } catch (e) {
+        console.error(e, publication);
+      }
+    }
+  }
 };
 
 onMounted(() => {
@@ -106,10 +128,20 @@ const onClickSubscribe = async () => {
 const onClickLeave = () => {
   context.dispose();
 };
-const onClickSend = async () => {
-  const timestamp = new Date().toLocaleString();
-  data.write(`${timestamp} ${comment.value}`);
+const onClickSend = async (e) => {
+  const comment = e;
+  if (data) {
+    data.write(comment);
+    // TODO: ちゃんとストリームをSubscribeするようにしたい。
+    comments.value.push(comment);
+  }
 };
+
+onUnmounted(async () => {
+  if (room) {
+    await room.leave();
+  }
+});
 </script>
 
 <template>
@@ -121,13 +153,8 @@ const onClickSend = async () => {
     :disabled="!hasRoomName"
   />
   <base-button label="Leave" @click="onClickLeave" />
-  <v-virtual-scroll :height="300" :items="items">
-    <template v-slot:default="{ item }">
-      {{ item }}
-    </template>
-  </v-virtual-scroll>
-  <v-text-field type="text" label="comment" v-model="comment" />
-  <base-button label="Send" @click="onClickSend" />
+  <comment-column :comments="comments" />
+  <comment-form-send @send="onClickSend" />
 </template>
 
 <style scoped></style>
