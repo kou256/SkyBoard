@@ -1,43 +1,124 @@
 <script setup>
 import SkyBoardVideo from "./SkyBoardVideo.vue";
 import BaseButton from "./BaseButton.vue";
-import { computed, inject, onMounted, ref } from "vue";
-import { SkyWayContext, SkyWayRoom } from "@skyway-sdk/room";
+import CommentFormSend from "./CommentFormSend.vue";
+import CommentColumn from "./CommentColumn.vue";
+import { computed, inject, onMounted, onUnmounted, ref } from "vue";
+import {
+  nowInSec,
+  SkyWayAuthToken,
+  SkyWayContext,
+  SkyWayRoom,
+  SkyWayStreamFactory,
+  uuidV4,
+} from "@skyway-sdk/room";
 
 const roomName = ref("");
+let room;
+let me;
 const hasRoomName = computed(() => roomName.value.length > 0);
 
-let skyWayToken;
+const skyWayToken = new SkyWayAuthToken({
+  jti: uuidV4(),
+  iat: nowInSec(),
+  exp: nowInSec() + 60 * 60 * 24,
+  scope: {
+    app: {
+      id: import.meta.env.VITE_SKYWAY_APP_ID,
+      turn: true,
+      actions: ["read"],
+      channels: [
+        {
+          id: "*",
+          name: "*",
+          actions: ["write"],
+          members: [
+            {
+              id: "*",
+              name: "*",
+              actions: ["write"],
+              publication: {
+                actions: ["write"],
+              },
+              subscription: {
+                actions: ["write"],
+              },
+            },
+          ],
+          sfuBots: [
+            {
+              actions: ["write"],
+              forwardings: [
+                {
+                  actions: ["write"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    },
+  },
+}).encode(import.meta.env.VITE_SKYWAY_SECRET_KEY);
 const remoteVideo = ref(null);
+const comments = ref([]);
 let context;
+let data;
 
 const startSubscription = async () => {
   context = await SkyWayContext.Create(skyWayToken);
-  console.debug(context);
 
-  const room = await SkyWayRoom.Find(
+  room = await SkyWayRoom.Find(
     context,
     {
       name: roomName.value,
     },
     "p2p"
   );
-  console.debug(room);
-  const me = await room.join();
-
-  for (const publication of room.publications) {
-    const { stream } = await me.subscribe(publication.id);
-    stream.attach(remoteVideo.value.video);
-  }
+  me = await room.join();
 
   room.onStreamPublished.add(async (e) => {
-    const { stream } = await me.subscribe(e.publication.id);
-    stream.attach(remoteVideo.value.video);
+    if (e.publication.contentType === "data") {
+      const { stream } = await me.subscribe(e.publication.id);
+      if (stream) {
+        stream.onData.add((comment) => {
+          comments.value.push(comment);
+        });
+      }
+    }
   });
+
+  data = await SkyWayStreamFactory.createDataStream(context);
+  await me.publish(data);
+
+  let subscribedVideo = false;
+  let subscribedAudio = false;
+  for (const publication of room.publications.filter((publication) => {
+    return publication.publisher.id !== me.id;
+  })) {
+    if (publication.state === "enabled") {
+      try {
+        const { stream } = await me.subscribe(publication.id);
+        if (publication.contentType === "video" && !subscribedVideo) {
+          stream.attach(remoteVideo.value.video);
+          subscribedVideo = true;
+        } else if (publication.contentType === "audio" && !subscribedAudio) {
+          stream.attach(remoteVideo.value.video);
+          subscribedAudio = true;
+        } else if (publication.contentType === "data") {
+          stream.onData.add((comment) => {
+            comments.value.push(comment);
+          });
+        }
+      } catch (e) {
+        console.error(e, publication);
+      }
+    }
+  }
 };
 
 onMounted(() => {
-  skyWayToken = inject("skyWayToken", null);
+  // skyWayToken = inject("skyWayToken", null);
 });
 
 const onClickSubscribe = async () => {
@@ -47,6 +128,20 @@ const onClickSubscribe = async () => {
 const onClickLeave = () => {
   context.dispose();
 };
+const onClickSend = async (e) => {
+  const comment = e;
+  if (data) {
+    data.write(comment);
+    // TODO: ちゃんとストリームをSubscribeするようにしたい。
+    comments.value.push(comment);
+  }
+};
+
+onUnmounted(async () => {
+  if (room) {
+    await room.leave();
+  }
+});
 </script>
 
 <template>
@@ -58,6 +153,8 @@ const onClickLeave = () => {
     :disabled="!hasRoomName"
   />
   <base-button label="Leave" @click="onClickLeave" />
+  <comment-column :comments="comments" />
+  <comment-form-send @send="onClickSend" />
 </template>
 
 <style scoped></style>
