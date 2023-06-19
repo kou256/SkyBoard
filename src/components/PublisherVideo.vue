@@ -1,8 +1,9 @@
 <script setup>
-import SkyBoardVideo from "./SkyBoardVideo.vue";
 import BaseButton from "./BaseButton.vue";
 import CommentColumn from "./CommentColumn.vue";
+import PublisherVideoCanvas from "./PublisherVideoCanvas.vue";
 import {
+  LocalVideoStream,
   nowInSec,
   SkyWayAuthToken,
   SkyWayContext,
@@ -16,8 +17,7 @@ const roomId = ref("None");
 const roomName = ref("");
 let room;
 const hasRoomName = computed(() => roomName.value.length > 0);
-
-const localVideo = ref(null);
+const videoCanvas = ref(null);
 let context;
 const comments = ref([]);
 const skyWayToken = new SkyWayAuthToken({
@@ -65,9 +65,8 @@ const skyWayToken = new SkyWayAuthToken({
 
 const startPublication = async () => {
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-    const { audio, video } =
-      await SkyWayStreamFactory.createMicrophoneAudioAndCameraStream();
-    video.attach(localVideo.value.video);
+    const audio = await SkyWayStreamFactory.createMicrophoneAudioStream();
+    const video = new LocalVideoStream(videoCanvas.value.canvasStreamTrack);
 
     context = await SkyWayContext.Create(skyWayToken);
 
@@ -118,7 +117,7 @@ onUnmounted(async () => {
 </script>
 
 <template>
-  <sky-board-video ref="localVideo" />
+  <publisher-video-canvas ref="videoCanvas" />
   <v-text-field type="text" label="Room Name" v-model="roomName" />
   <v-label>Room ID: {{ roomId }}</v-label>
   <base-button label="Create" @click="onClickCreate" :disabled="!hasRoomName" />
