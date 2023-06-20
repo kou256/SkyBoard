@@ -5,9 +5,14 @@ import { createVuetify } from "vuetify";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
 
+import VueKonva from "vue-konva";
+
 const vuetify = createVuetify({
   components,
   directives,
 });
 
-createApp(App).use(vuetify).mount("#app");
+const app = createApp(App);
+app.use(vuetify);
+app.use(VueKonva, { prefix: "konva" });
+app.mount("#app");
