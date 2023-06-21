@@ -1,7 +1,7 @@
 <script setup>
-import {onMounted, ref} from "vue";
+import { onMounted, ref } from "vue";
 const paintCanvas = ref(null);
-const cursor = ref({x: 0, y: 0, prevX: 0, prevY: 0});
+const cursor = ref({ x: 0, y: 0, prevX: 0, prevY: 0 });
 const isDrawing = ref(false);
 
 onMounted(() => {
@@ -34,9 +34,8 @@ const draw = () => {
   const canvasElement = paintCanvas.value;
   const canvasCtx = canvasElement.getContext("2d");
 
-  canvasCtx.beginPath()
-  canvasCtx.lineWidth = 5;
-  canvasCtx.moveTo(cursor.value.prevX, cursor.value.prevY)
+  canvasCtx.beginPath();
+  canvasCtx.moveTo(cursor.value.prevX, cursor.value.prevY);
   canvasCtx.lineTo(cursor.value.x, cursor.value.y);
   canvasCtx.lineCap = "round";
   canvasCtx.stroke();
@@ -48,10 +47,10 @@ const setPaintMode = (mode) => {
   const canvasCtx = paintCanvas.value.getContext("2d");
   if (mode === "pencil") {
     canvasCtx.globalCompositeOperation = "source-over";
-    console.log(canvasCtx.globalCompositeOperation)
+    console.log(canvasCtx.globalCompositeOperation);
   } else if (mode === "eraser") {
     canvasCtx.globalCompositeOperation = "destination-out";
-    console.log(canvasCtx.globalCompositeOperation)
+    console.log(canvasCtx.globalCompositeOperation);
   }
   console.log(mode);
 };
@@ -61,12 +60,17 @@ const setPaintColor = (color) => {
   canvasCtx.strokeStyle = color;
 };
 
+const setBrushSize = (brushSize) => {
+  const canvasCtx = paintCanvas.value.getContext("2d");
+  canvasCtx.lineWidth = brushSize;
+};
+
 defineExpose({
   paintCanvas,
   setPaintMode,
-  setPaintColor
+  setPaintColor,
+  setBrushSize,
 });
-
 </script>
 
 <template>

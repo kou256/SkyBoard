@@ -1,7 +1,7 @@
 <script setup>
 import BaseButton from "./BaseButton.vue";
 import CommentColumn from "./CommentColumn.vue";
-import PublisherVideoCanvas from "./PublisherVideoCanvas.vue";
+import PublisherCanvasConcat from "./PublisherCanvasConcat.vue";
 import PublisherCanvasCtrl from "./PublisherCanvasCtrl.vue";
 import {
   LocalVideoStream,
@@ -21,7 +21,7 @@ const roomId = ref("None");
 const roomName = ref("");
 let room;
 const hasRoomName = computed(() => roomName.value.length > 0);
-const videoCanvas = ref(null);
+const concatCanvas = ref(null);
 let context;
 const comments = ref([]);
 const skyWayToken = new SkyWayAuthToken({
@@ -70,7 +70,7 @@ const skyWayToken = new SkyWayAuthToken({
 const startPublication = async () => {
   if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
     const audio = await SkyWayStreamFactory.createMicrophoneAudioStream();
-    const video = new LocalVideoStream(videoCanvas.value.canvasStreamTrack);
+    const video = new LocalVideoStream(concatCanvas.value.canvasStreamTrack);
 
     context = await SkyWayContext.Create(skyWayToken);
 
@@ -120,23 +120,31 @@ onUnmounted(async () => {
 });
 
 const onChangeMode = (mode) => {
-  videoCanvas.value.paintCanvas.setPaintMode(mode);
+  concatCanvas.value.paintCanvas.setPaintMode(mode);
 };
 
 const onChangeColor = (color) => {
-  videoCanvas.value.paintCanvas.setPaintColor(color);
+  concatCanvas.value.paintCanvas.setPaintColor(color);
+};
+
+const onChangeBrushSize = (brushSize) => {
+  concatCanvas.value.paintCanvas.setBrushSize(brushSize);
 };
 </script>
 
 <template>
-  <publisher-video-canvas ref="videoCanvas" />
+  <publisher-canvas-concat ref="concatCanvas" />
   <v-text-field type="text" label="Room Name" v-model="roomName" />
   <v-label>Room ID: {{ roomId }}</v-label>
   <base-button label="move" @click="paintMode = 'move'" />
   <base-button label="paint" @click="paintMode = 'paint'" />
   <base-button label="Create" @click="onClickCreate" :disabled="!hasRoomName" />
   <base-button label="Leave" @click="onClickLeave" />
-  <publisher-canvas-ctrl @change-mode="onChangeMode" @change-color="onChangeColor"/>
+  <publisher-canvas-ctrl
+    @change-mode="onChangeMode"
+    @change-color="onChangeColor"
+    @change-brush-size="onChangeBrushSize"
+  />
   <comment-column :comments="comments" />
 </template>
 
