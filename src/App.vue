@@ -1,8 +1,9 @@
 <script setup>
+import RoomDialogEnter from "./components/RoomDialogEnter.vue";
 import PublisherVideo from "./components/PublisherVideo.vue";
 import SubscriberView from "./components/SubscriberView.vue";
 import { nowInSec, SkyWayAuthToken, uuidV4 } from "@skyway-sdk/room";
-import { onMounted, provide } from "vue";
+import { computed, onMounted, provide, ref } from "vue";
 const skyWayToken = new SkyWayAuthToken({
   jti: uuidV4(),
   iat: nowInSec(),
@@ -49,17 +50,25 @@ const skyWayToken = new SkyWayAuthToken({
 onMounted(() => {
   provide("skyWayToken", skyWayToken);
 });
+
+const roomName = ref("");
+const roomType = ref("");
+const onClickCreate = (inputRoomName) => {
+  roomName.value = inputRoomName;
+  roomType.value = "publisher";
+  provide("roomName", roomName);
+};
+const onClickJoin = (inputRoomName) => {
+  roomName.value = inputRoomName;
+  roomType.value = "subscriber";
+  provide("roomName", roomName);
+};
 </script>
 
 <template>
-  <v-row>
-    <v-col cols="6">
-      <publisher-video />
-    </v-col>
-    <v-col cols="6">
-      <subscriber-view />
-    </v-col>
-  </v-row>
+  <room-dialog-enter @click:create="onClickCreate" @click:join="onClickJoin" />
+  <publisher-video v-if="roomType === 'publisher'" />
+  <subscriber-view v-if="roomType === 'subscriber'" />
 </template>
 
 <style scoped>
