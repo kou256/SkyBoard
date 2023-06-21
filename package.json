@@ -9,9 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mdi/font": "^7.2.96",
     "@skyway-sdk/room": "^1.4.0",
+    "konva": "^9.2.0",
     "prettier": "^2.8.8",
     "vue": "^3.2.47",
+    "vue-konva": "^3.0.2",
     "vuetify": "^3.3.3"
   },
   "devDependencies": {
