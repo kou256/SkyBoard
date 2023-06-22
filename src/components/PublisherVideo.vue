@@ -12,13 +12,16 @@ import {
   SkyWayStreamFactory,
   uuidV4,
 } from "@skyway-sdk/room";
-import { computed, provide, onMounted, onUnmounted, ref } from "vue";
+import {computed, provide, onMounted, onUnmounted, ref, inject} from "vue";
 
-const paintMode = ref("move");
-provide("paintMode", paintMode);
+const files = ref([]);
+provide("files", files);
+const onUpdateFiles = (loadedFiles) => {
+  files.value.push(...loadedFiles);
+};
 
 const roomId = ref("None");
-const roomName = ref("");
+const roomName = inject("roomName");
 let room;
 const hasRoomName = computed(() => roomName.value.length > 0);
 const concatCanvas = ref(null);
@@ -119,31 +122,34 @@ onUnmounted(async () => {
   }
 });
 
+const paintMode = ref("cursor");
+let brushColor = ref("#000000");
+let brushSize = ref(5);
+provide("paintMode", paintMode);
+provide("brushColor", brushColor);
+provide("brushSize", brushSize);
 const onChangeMode = (mode) => {
-  concatCanvas.value.paintCanvas.setPaintMode(mode);
+  paintMode.value = mode;
 };
 
-const onChangeColor = (color) => {
-  concatCanvas.value.paintCanvas.setPaintColor(color);
+const onChangeColor = (newColor) => {
+  brushColor.value = newColor;
 };
 
-const onChangeBrushSize = (brushSize) => {
-  concatCanvas.value.paintCanvas.setBrushSize(brushSize);
+const onChangeBrushSize = (newBrushSize) => {
+  brushSize.value = newBrushSize;
 };
 </script>
 
 <template>
   <publisher-canvas-concat ref="concatCanvas" />
-  <v-text-field type="text" label="Room Name" v-model="roomName" />
-  <v-label>Room ID: {{ roomId }}</v-label>
-  <base-button label="move" @click="paintMode = 'move'" />
-  <base-button label="paint" @click="paintMode = 'paint'" />
   <base-button label="Create" @click="onClickCreate" :disabled="!hasRoomName" />
   <base-button label="Leave" @click="onClickLeave" />
   <publisher-canvas-ctrl
     @change-mode="onChangeMode"
     @change-color="onChangeColor"
     @change-brush-size="onChangeBrushSize"
+    @update:files="onUpdateFiles"
   />
   <comment-column :comments="comments" />
 </template>

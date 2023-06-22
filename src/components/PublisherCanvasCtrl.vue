@@ -1,12 +1,12 @@
 <script setup>
-import { ref } from "vue";
+import {provide, ref} from "vue";
 const colorPicker = ref("#000000");
 const paintMode = ref(0);
-const paintModes = ["cursor", "pencil", "eraser"];
+const paintModes = ["cursor", "paint", "erase"];
 const isColorPickerDialog = ref(false);
 const brushSize = ref(5);
 
-const emit = defineEmits(["changeColor", "changeMode", "changeBrushSize"]);
+const emit = defineEmits(["changeColor", "changeMode", "changeBrushSize", "update:files"]);
 </script>
 
 <template>
@@ -53,6 +53,11 @@ const emit = defineEmits(["changeColor", "changeMode", "changeBrushSize"]);
       max="10"
       @update:model-value="emit('changeBrushSize', brushSize)"
     ></v-slider>
+    <v-file-input
+        label="File input"
+        accept="image/*"
+        @update:model-value="emit('update:files', $event)"
+    />
   </div>
 </template>
 

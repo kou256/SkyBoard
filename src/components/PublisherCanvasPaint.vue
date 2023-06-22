@@ -1,11 +1,14 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import {inject, onMounted, provide, ref, watch} from "vue";
 const paintCanvas = ref(null);
 const cursor = ref({ x: 0, y: 0, prevX: 0, prevY: 0 });
 const isDrawing = ref(false);
-
 onMounted(() => {
   const canvasElement = paintCanvas.value;
+  const canvasCtx = canvasElement.getContext("2d");
+
+  canvasCtx.lineWidth = brushSize.value;
+  canvasCtx.strokeStyle = brushColor.value;
 
   canvasElement.addEventListener("mousedown", (e) => {
     getCursorPos(e);
@@ -43,33 +46,36 @@ const draw = () => {
   cursor.value.prevY = cursor.value.y;
 };
 
-const setPaintMode = (mode) => {
+const paintMode = inject("paintMode");
+const brushColor = inject("brushColor");
+const brushSize = inject("brushSize");
+watch(() => paintMode, (newMode) => { setPaintMode(newMode); }, {deep: true});
+watch(() => brushColor, (newBrushColor) => { setBrushColor(newBrushColor) }, {deep: true});
+watch(() => brushSize, (newBrushSize) => { setBrushSize(newBrushSize) }, {deep: true});
+
+const setPaintMode = (newMode) => {
   const canvasCtx = paintCanvas.value.getContext("2d");
-  if (mode === "pencil") {
+  if (newMode === "paint") {
     canvasCtx.globalCompositeOperation = "source-over";
-    console.log(canvasCtx.globalCompositeOperation);
-  } else if (mode === "eraser") {
+  } else if (newMode === "erase") {
     canvasCtx.globalCompositeOperation = "destination-out";
-    console.log(canvasCtx.globalCompositeOperation);
   }
-  console.log(mode);
 };
 
-const setPaintColor = (color) => {
+const setBrushColor = (newBrushColor) => {
   const canvasCtx = paintCanvas.value.getContext("2d");
-  canvasCtx.strokeStyle = color;
+  canvasCtx.strokeStyle = newBrushColor.value
+  console.log(canvasCtx.strokeStyle);
 };
 
-const setBrushSize = (brushSize) => {
+const setBrushSize = (newBrushSize) => {
   const canvasCtx = paintCanvas.value.getContext("2d");
-  canvasCtx.lineWidth = brushSize;
+  canvasCtx.lineWidth = newBrushSize.value;
+  console.log(canvasCtx.lineWidth);
 };
 
 defineExpose({
   paintCanvas,
-  setPaintMode,
-  setPaintColor,
-  setBrushSize,
 });
 </script>
 

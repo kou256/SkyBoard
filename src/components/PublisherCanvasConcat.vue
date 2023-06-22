@@ -26,7 +26,7 @@ onMounted(() => {
 const concat = () => {
   const concatCanvasCtx = concatCanvasElement.getContext("2d");
   concatCanvasCtx.drawImage(videoCanvas.value.videoCanvas, 0, 0, width, height);
-  if (paintMode.value === "move") {
+  if (paintMode.value === "cursor") {
     imageCanvas.value.imageCanvas.style.zIndex = "2";
     paintCanvas.value.paintCanvas.style.zIndex = "1";
   } else if (paintMode.value === "paint") {

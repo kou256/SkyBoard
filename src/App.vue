@@ -3,7 +3,7 @@ import RoomDialogEnter from "./components/RoomDialogEnter.vue";
 import PublisherVideo from "./components/PublisherVideo.vue";
 import SubscriberView from "./components/SubscriberView.vue";
 import { nowInSec, SkyWayAuthToken, uuidV4 } from "@skyway-sdk/room";
-import { computed, onMounted, provide, ref } from "vue";
+import {computed, onMounted, provide, readonly, ref} from "vue";
 const skyWayToken = new SkyWayAuthToken({
   jti: uuidV4(),
   iat: nowInSec(),
@@ -53,15 +53,14 @@ onMounted(() => {
 
 const roomName = ref("");
 const roomType = ref("");
+provide("roomName", readonly(roomName));
 const onClickCreate = (inputRoomName) => {
   roomName.value = inputRoomName;
   roomType.value = "publisher";
-  provide("roomName", roomName);
 };
 const onClickJoin = (inputRoomName) => {
   roomName.value = inputRoomName;
   roomType.value = "subscriber";
-  provide("roomName", roomName);
 };
 </script>
 
