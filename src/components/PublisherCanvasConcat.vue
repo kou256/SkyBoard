@@ -44,7 +44,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="canvas-wrapper">
+  <div class="canvas-wrapper d-flex justify-center">
     <publisher-canvas-video ref="videoCanvas" />
     <publisher-canvas-paint ref="paintCanvas" />
     <publisher-canvas-image ref="imageCanvas" />
@@ -54,13 +54,17 @@ defineExpose({
 <style scoped>
 .canvas-wrapper {
   position: relative;
-  width: 640px;
-  height: 480px;
+  width: 80vh;
+  height: 80vh;
+  display: flex;
+  justify-content: center;
 }
 
 .canvas-wrapper > canvas {
   position: absolute;
   top: 0;
   left: 0;
+  min-width: 100%;
+  min-height: 100%;
 }
 </style>

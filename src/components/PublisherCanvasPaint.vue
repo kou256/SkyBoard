@@ -80,11 +80,13 @@ defineExpose({
 </script>
 
 <template>
-  <canvas ref="paintCanvas" width="640" height="480"></canvas>
+  <canvas ref="paintCanvas"></canvas>
 </template>
 
 <style scoped>
 canvas {
   z-index: 1;
+  min-width: 100%;
+  min-height: 100%;
 }
 </style>

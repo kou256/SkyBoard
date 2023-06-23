@@ -11,6 +11,11 @@ import VueKonva from "vue-konva";
 const vuetify = createVuetify({
   components,
   directives,
+  defaults: {
+    VContainer: {
+      color: "black"
+    }
+  }
 });
 
 const app = createApp(App);

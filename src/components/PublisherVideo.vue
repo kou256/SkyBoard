@@ -14,11 +14,6 @@ import {
 } from "@skyway-sdk/room";
 import {computed, provide, onMounted, onUnmounted, ref, inject} from "vue";
 
-const files = ref([]);
-provide("files", files);
-const onUpdateFiles = (loadedFiles) => {
-  files.value.push(...loadedFiles);
-};
 
 const roomId = ref("None");
 const roomName = inject("roomName");
@@ -108,50 +103,16 @@ onMounted(() => {
   // skyWayToken = inject("skyWayToken", null);
 });
 
-const onClickCreate = async () => {
-  await startPublication();
-};
-
-const onClickLeave = () => {
-  context.dispose();
-};
-
 onUnmounted(async () => {
   if (room) {
     await room.close();
   }
 });
 
-const paintMode = ref("cursor");
-let brushColor = ref("#000000");
-let brushSize = ref(5);
-provide("paintMode", paintMode);
-provide("brushColor", brushColor);
-provide("brushSize", brushSize);
-const onChangeMode = (mode) => {
-  paintMode.value = mode;
-};
-
-const onChangeColor = (newColor) => {
-  brushColor.value = newColor;
-};
-
-const onChangeBrushSize = (newBrushSize) => {
-  brushSize.value = newBrushSize;
-};
 </script>
 
 <template>
   <publisher-canvas-concat ref="concatCanvas" />
-  <base-button label="Create" @click="onClickCreate" :disabled="!hasRoomName" />
-  <base-button label="Leave" @click="onClickLeave" />
-  <publisher-canvas-ctrl
-    @change-mode="onChangeMode"
-    @change-color="onChangeColor"
-    @change-brush-size="onChangeBrushSize"
-    @update:files="onUpdateFiles"
-  />
-  <comment-column :comments="comments" />
 </template>
 
 <style scoped></style>
