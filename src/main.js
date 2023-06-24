@@ -5,6 +5,7 @@ import { createVuetify } from "vuetify";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
 import "@mdi/font/css/materialdesignicons.css";
+import "vuetify/dist/vuetify.min.css";
 
 import VueKonva from "vue-konva";
 
@@ -13,9 +14,9 @@ const vuetify = createVuetify({
   directives,
   defaults: {
     VContainer: {
-      color: "black"
-    }
-  }
+      color: "black",
+    },
+  },
 });
 
 const app = createApp(App);

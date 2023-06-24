@@ -123,25 +123,20 @@ const rail = ref(true);
       </v-container>
     </v-main>
     <v-footer>
-      <v-row justify="space-around">
-        <v-col cols="1">
-          <base-button label="Create" @click="onClickCreate" :disabled="!hasRoomName" />
-        </v-col>
-        <v-col cols="1">
-          <base-button label="Leave" @click="onClickLeave" />
-        </v-col>
-        <v-col cols="6">
-          <publisher-canvas-ctrl
-              @change-mode="onChangeMode"
-              @change-color="onChangeColor"
-              @change-brush-size="onChangeBrushSize"
-              @update:files="onUpdateFiles"
-              v-if="roomType === 'publisher'"
-          />
-        </v-col>
-      </v-row>
+      <publisher-canvas-ctrl
+        @change-mode="onChangeMode"
+        @change-color="onChangeColor"
+        @change-brush-size="onChangeBrushSize"
+        @update:files="onUpdateFiles"
+        v-if="roomType === 'publisher'"
+      />
+      <subscriber-ctrl v-if="roomType === 'subscriber'" />
     </v-footer>
-    <room-dialog-enter @click:create="onClickCreate" @click:join="onClickJoin" v-if="roomType === ''"/>
+    <room-dialog-enter
+      @click:create="onClickCreate"
+      @click:join="onClickJoin"
+      v-if="roomType === ''"
+    />
   </v-app>
 </template>
 
