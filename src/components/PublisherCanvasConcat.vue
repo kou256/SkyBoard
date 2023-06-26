@@ -31,7 +31,13 @@ onMounted(() => {
 
 const concat = () => {
   const concatCanvasCtx = concatCanvasElement.getContext("2d");
-  concatCanvasCtx.drawImage(videoCanvas.value.videoCanvas, 0, 0, width, height);
+  concatCanvasCtx.drawImage(
+    videoCanvas.value.videoCanvas,
+    0,
+    0,
+    canvasWidth.value,
+    canvasHeight.value
+  );
   if (paintMode.value === "cursor") {
     imageCanvas.value.imageCanvas.style.zIndex = "2";
     paintCanvas.value.paintCanvas.style.zIndex = "1";
@@ -39,8 +45,20 @@ const concat = () => {
     imageCanvas.value.imageCanvas.style.zIndex = "1";
     paintCanvas.value.paintCanvas.style.zIndex = "2";
   }
-  concatCanvasCtx.drawImage(imageCanvas.value.imageCanvas, 0, 0, width, height);
-  concatCanvasCtx.drawImage(paintCanvas.value.paintCanvas, 0, 0, width, height);
+  concatCanvasCtx.drawImage(
+    imageCanvas.value.imageCanvas,
+    0,
+    0,
+    canvasWidth.value,
+    canvasHeight.value
+  );
+  concatCanvasCtx.drawImage(
+    paintCanvas.value.paintCanvas,
+    0,
+    0,
+    canvasWidth.value,
+    canvasHeight.value
+  );
 };
 
 defineExpose({

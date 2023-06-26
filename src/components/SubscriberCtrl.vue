@@ -1,11 +1,11 @@
 <script setup>
-
+import { publishComment } from "../js/module/skyway";
 import CommentFormSend from "./CommentFormSend.vue";
 
 const emits = defineEmits(["send"]);
-const onClickSend = (e) => {
+const onClickSend = async (e) => {
   const comment = e;
-  emits("send", comment);
+  await publishComment(comment);
   // if (data) {
   //   data.write(comment);
   //   // TODO: ちゃんとストリームをSubscribeするようにしたい。
@@ -18,6 +18,4 @@ const onClickSend = (e) => {
   <comment-form-send @send="onClickSend" />
 </template>
 
-<style scoped>
-
-</style>
+<style scoped></style>

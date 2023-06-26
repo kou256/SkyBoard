@@ -2,69 +2,29 @@
 import RoomDialogEnter from "./components/RoomDialogEnter.vue";
 import PublisherVideo from "./components/PublisherVideo.vue";
 import SubscriberView from "./components/SubscriberView.vue";
-import { nowInSec, SkyWayAuthToken, uuidV4 } from "@skyway-sdk/room";
 import { computed, onMounted, provide, readonly, ref } from "vue";
 import CommentColumn from "./components/CommentColumn.vue";
 import PublisherCanvasCtrl from "./components/PublisherCanvasCtrl.vue";
-import BaseButton from "./components/BaseButton.vue";
 import SubscriberCtrl from "./components/SubscriberCtrl.vue";
-import CommentFormSend from "./components/CommentFormSend.vue";
-const skyWayToken = new SkyWayAuthToken({
-  jti: uuidV4(),
-  iat: nowInSec(),
-  exp: nowInSec() + 60 * 60 * 24,
-  scope: {
-    app: {
-      id: import.meta.env.VITE_SKYWAY_APP_ID,
-      turn: true,
-      actions: ["read"],
-      channels: [
-        {
-          id: "*",
-          name: "*",
-          actions: ["write"],
-          members: [
-            {
-              id: "*",
-              name: "*",
-              actions: ["write"],
-              publication: {
-                actions: ["write"],
-              },
-              subscription: {
-                actions: ["write"],
-              },
-            },
-          ],
-          sfuBots: [
-            {
-              actions: ["write"],
-              forwardings: [
-                {
-                  actions: ["write"],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  },
-}).encode(import.meta.env.VITE_SKYWAY_SECRET_KEY);
 
 onMounted(() => {
-  provide("skyWayToken", skyWayToken);
   window.addEventListener("resize", onResizeWindow);
 });
 
 const roomName = ref("");
 const roomType = ref("");
+const comments = ref([]);
 provide("roomName", readonly(roomName));
+provide("comments", readonly(comments));
 const onClickCreate = (inputRoomName) => {
   roomName.value = inputRoomName;
   roomType.value = "publisher";
 
   onResizeWindow();
+};
+const onSendComment = (comment) => {
+  console.log(comment);
+  comments.value.push(comment);
 };
 const onResizeWindow = () => {
   const widthRatio = canvasParent.value.clientWidth / canvasWidth.value;
@@ -130,7 +90,10 @@ const onUpdateFiles = (loadedFiles) => {
         <v-col cols="8">
           <v-sheet class="h-100" color="#000000" @resize="onResizeWindow">
             <div ref="canvasParent" class="h-100 w-100">
-              <publisher-video v-if="roomType === 'publisher'" />
+              <publisher-video
+                v-if="roomType === 'publisher'"
+                @send="onSendComment"
+              />
               <subscriber-view v-if="roomType === 'subscriber'" />
             </div>
           </v-sheet>
