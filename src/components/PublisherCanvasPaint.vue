@@ -1,8 +1,10 @@
 <script setup>
-import {inject, onMounted, provide, ref, watch} from "vue";
+import { inject, onMounted, provide, ref, watch } from "vue";
 const paintCanvas = ref(null);
 const cursor = ref({ x: 0, y: 0, prevX: 0, prevY: 0 });
 const isDrawing = ref(false);
+const canvasWidth = inject("canvasWidth");
+const canvasHeight = inject("canvasHeight");
 onMounted(() => {
   const canvasElement = paintCanvas.value;
   const canvasCtx = canvasElement.getContext("2d");
@@ -49,9 +51,27 @@ const draw = () => {
 const paintMode = inject("paintMode");
 const brushColor = inject("brushColor");
 const brushSize = inject("brushSize");
-watch(() => paintMode, (newMode) => { setPaintMode(newMode); }, {deep: true});
-watch(() => brushColor, (newBrushColor) => { setBrushColor(newBrushColor) }, {deep: true});
-watch(() => brushSize, (newBrushSize) => { setBrushSize(newBrushSize) }, {deep: true});
+watch(
+  () => paintMode,
+  (newMode) => {
+    setPaintMode(newMode);
+  },
+  { deep: true }
+);
+watch(
+  () => brushColor,
+  (newBrushColor) => {
+    setBrushColor(newBrushColor);
+  },
+  { deep: true }
+);
+watch(
+  () => brushSize,
+  (newBrushSize) => {
+    setBrushSize(newBrushSize);
+  },
+  { deep: true }
+);
 
 const setPaintMode = (newMode) => {
   const canvasCtx = paintCanvas.value.getContext("2d");
@@ -64,7 +84,7 @@ const setPaintMode = (newMode) => {
 
 const setBrushColor = (newBrushColor) => {
   const canvasCtx = paintCanvas.value.getContext("2d");
-  canvasCtx.strokeStyle = newBrushColor.value
+  canvasCtx.strokeStyle = newBrushColor.value;
   console.log(canvasCtx.strokeStyle);
 };
 
@@ -80,13 +100,15 @@ defineExpose({
 </script>
 
 <template>
-  <canvas ref="paintCanvas"></canvas>
+  <canvas
+    ref="paintCanvas"
+    :width="canvasWidth"
+    :height="canvasHeight"
+  ></canvas>
 </template>
 
 <style scoped>
 canvas {
   z-index: 1;
-  min-width: 100%;
-  min-height: 100%;
 }
 </style>

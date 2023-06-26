@@ -138,14 +138,6 @@ onUnmounted(async () => {
 
 <template>
   <sky-board-video ref="remoteVideo" />
-<!--  <v-text-field type="text" label="Room Name" v-model="roomName" />-->
-<!--  <base-button-->
-<!--    label="Join"-->
-<!--    @click="onClickSubscribe"-->
-<!--    :disabled="!hasRoomName"-->
-<!--  />-->
-<!--  <base-button label="Leave" @click="onClickLeave" />-->
-<!--  <comment-column :comments="comments" />-->
 </template>
 
 <style scoped></style>

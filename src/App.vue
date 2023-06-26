@@ -3,7 +3,7 @@ import RoomDialogEnter from "./components/RoomDialogEnter.vue";
 import PublisherVideo from "./components/PublisherVideo.vue";
 import SubscriberView from "./components/SubscriberView.vue";
 import { nowInSec, SkyWayAuthToken, uuidV4 } from "@skyway-sdk/room";
-import {computed, onMounted, provide, readonly, ref} from "vue";
+import { computed, onMounted, provide, readonly, ref } from "vue";
 import CommentColumn from "./components/CommentColumn.vue";
 import PublisherCanvasCtrl from "./components/PublisherCanvasCtrl.vue";
 import BaseButton from "./components/BaseButton.vue";
@@ -54,6 +54,7 @@ const skyWayToken = new SkyWayAuthToken({
 
 onMounted(() => {
   provide("skyWayToken", skyWayToken);
+  window.addEventListener("resize", onResizeWindow);
 });
 
 const roomName = ref("");
@@ -62,12 +63,31 @@ provide("roomName", readonly(roomName));
 const onClickCreate = (inputRoomName) => {
   roomName.value = inputRoomName;
   roomType.value = "publisher";
+
+  onResizeWindow();
 };
+const onResizeWindow = () => {
+  const widthRatio = canvasParent.value.clientWidth / canvasWidth.value;
+  const heightRatio = canvasParent.value.clientHeight / canvasHeight.value;
+  if (widthRatio > heightRatio) {
+    canvasWidth.value = canvasParent.value.clientWidth;
+    canvasHeight.value = canvasHeight.value * widthRatio;
+  } else {
+    canvasWidth.value = canvasWidth.value * heightRatio;
+    canvasHeight.value = canvasParent.value.clientHeight;
+  }
+};
+
 const onClickJoin = (inputRoomName) => {
   roomName.value = inputRoomName;
   roomType.value = "subscriber";
 };
 
+const canvasParent = ref(null);
+const canvasWidth = ref(1280);
+const canvasHeight = ref(720);
+provide("canvasWidth", canvasWidth);
+provide("canvasHeight", canvasHeight);
 
 const paintMode = ref("cursor");
 let brushColor = ref("#000000");
@@ -96,33 +116,31 @@ const onUpdateFiles = (loadedFiles) => {
 // const onClickCreate = async () => {
 //   await startPublication();
 // };
-const onClickLeave = () => {
-  context.dispose();
-}
-
-const rail = ref(true);
+// const onClickLeave = () => {
+//   context.dispose();
+// };
+//
 </script>
 
 <template>
-  <v-app class="h-auto w-auto my-2">
+  <v-app class="h-100 w-auto" @resize="onResizeWindow">
     <v-app-bar title="SkyBoard"></v-app-bar>
     <v-main>
-      <v-container class="h-100">
-        <v-row justify="space-around" no-gutters>
-          <v-col cols="8">
-            <v-sheet color="#000000" class="h-100">
-              <publisher-video class="mx-auto" v-if="roomType === 'publisher'" />
+      <v-row class="mt-1 mx-1 h-100" justify="space-around">
+        <v-col cols="8">
+          <v-sheet class="h-100" color="#000000" @resize="onResizeWindow">
+            <div ref="canvasParent" class="h-100 w-100">
+              <publisher-video v-if="roomType === 'publisher'" />
               <subscriber-view v-if="roomType === 'subscriber'" />
-            </v-sheet>
-          </v-col>
-          <v-col cols="4">
-            <comment-column :comments="['test']" />
-            <comment-form-send v-if="roomType === 'subscriber'" />
-          </v-col>
-        </v-row>
-      </v-container>
+            </div>
+          </v-sheet>
+        </v-col>
+        <v-col cols="4">
+          <comment-column :comments="['test']" />
+        </v-col>
+      </v-row>
     </v-main>
-    <v-footer>
+    <v-footer height="10">
       <publisher-canvas-ctrl
         @change-mode="onChangeMode"
         @change-color="onChangeColor"
@@ -140,8 +158,4 @@ const rail = ref(true);
   </v-app>
 </template>
 
-<style scoped>
-.v-container {
-  max-width: 100%;
-}
-</style>
+<style scoped></style>

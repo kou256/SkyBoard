@@ -8,7 +8,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <v-card>
+  <v-card class="h-100">
     <v-card-title>コメント</v-card-title>
     <v-card-item>
       <v-virtual-scroll :height="300" :items="props.comments">
