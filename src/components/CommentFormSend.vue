@@ -12,8 +12,14 @@ const onClickSend = async () => {
 </script>
 
 <template>
-  <v-text-field type="text" label="comment" v-model="comment" />
-  <base-button label="Send" @click="onClickSend" />
+  <v-row jsutify="spae-around" align="center">
+    <v-col cols="10">
+      <v-text-field type="text" label="コメント" v-model="comment" />
+    </v-col>
+    <v-col cols="2">
+      <base-button label="送信" @click="onClickSend" />
+    </v-col>
+  </v-row>
 </template>
 
 <style scoped></style>

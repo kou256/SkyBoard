@@ -1,39 +1,73 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { inject, onMounted, ref, watch } from "vue";
 
+const canvasWidth = inject("canvasWidth");
+const canvasHeight = inject("canvasHeight");
+const stage = ref(null);
 const configKonva = {
-  width: 640,
-  height: 480,
+  width: canvasWidth.value,
+  height: canvasHeight.value,
 };
+watch(
+  () => canvasWidth.value,
+  (newWidth) => {
+    imageCanvas.value.width = newWidth;
+    imageCanvas.style.width = `${canvasWidth.value}px`;
+    parent.style.width = `${canvasWidth.value}px`;
+  }
+);
+watch(
+  () => canvasHeight.value,
+  (newHeight) => {
+    imageCanvas.value.height = newHeight;
+    imageCanvas.style.height = `${canvasHeight.value}px`;
+    parent.style.height = `${canvasHeight.value}px`;
+  }
+);
+
 const transformer = ref(null);
-const files = ref([]);
 const selectedFileName = ref(null);
 const imageConfigs = ref([]);
 const imageCanvas = ref(null);
+const images = inject("files");
+let parent = null;
 
 onMounted(() => {
   // あとでcanvasにアクセスしたいのでquerySelectorで獲得してアクセスできるようにしておく。
   imageCanvas.value = document.querySelector(".konvajs-content > canvas");
+  parent = document.querySelector(".konvajs-content").parentElement;
+  parent.style.width = `${canvasWidth.value}px`;
+  parent.style.height = `${canvasHeight.value}px`;
 });
-const onUpdateFiles = (e) => {
-  files.value.push(...e);
 
-  files.value.forEach((file) => {
-    const image = new Image();
-    image.src = URL.createObjectURL(file);
-    image.onload = () => {
-      imageConfigs.value.push({
-        x: 50,
-        y: 50,
-        image: image,
-        width: 320,
-        height: 240,
-        name: file.name,
-        draggable: true,
-      });
-    };
-  });
-};
+watch(
+  () => images.value,
+  (newImages) => {
+    const addedImages = newImages.filter(
+      (image) =>
+        !imageConfigs.value
+          .map((imageConfig) => imageConfig.name)
+          .includes(image.name)
+    );
+    addedImages.forEach((file) => {
+      const image = new Image();
+      image.src = URL.createObjectURL(file);
+      image.onload = () => {
+        const ratio = image.width / 320;
+        imageConfigs.value.push({
+          x: 50,
+          y: 50,
+          image: image,
+          width: image.width / ratio,
+          height: image.height / ratio,
+          name: file.name,
+          draggable: true,
+        });
+      };
+    });
+  },
+  { deep: true }
+);
 
 const handleTransformEnd = (e) => {
   const imageConfig = imageConfigs.value.find(
@@ -81,7 +115,11 @@ defineExpose({
 </script>
 
 <template>
-  <konva-stage :config="configKonva" @mousedown="handleStageMouseDown">
+  <konva-stage
+    ref="stage"
+    :config="configKonva"
+    @mousedown="handleStageMouseDown"
+  >
     <konva-layer>
       <konva-image
         v-for="config in imageConfigs"
@@ -91,12 +129,6 @@ defineExpose({
       <konva-transformer ref="transformer" />
     </konva-layer>
   </konva-stage>
-  <v-file-input
-    v-bind:model-value="files"
-    label="File input"
-    accept="image/*"
-    @update:model-value="onUpdateFiles"
-  />
 </template>
 
 <style scoped></style>

@@ -12,13 +12,11 @@ import {
   SkyWayStreamFactory,
   uuidV4,
 } from "@skyway-sdk/room";
-import { computed, provide, onMounted, onUnmounted, ref } from "vue";
+import {computed, provide, onMounted, onUnmounted, ref, inject} from "vue";
 
-const paintMode = ref("move");
-provide("paintMode", paintMode);
 
 const roomId = ref("None");
-const roomName = ref("");
+const roomName = inject("roomName");
 let room;
 const hasRoomName = computed(() => roomName.value.length > 0);
 const concatCanvas = ref(null);
@@ -105,47 +103,16 @@ onMounted(() => {
   // skyWayToken = inject("skyWayToken", null);
 });
 
-const onClickCreate = async () => {
-  await startPublication();
-};
-
-const onClickLeave = () => {
-  context.dispose();
-};
-
 onUnmounted(async () => {
   if (room) {
     await room.close();
   }
 });
 
-const onChangeMode = (mode) => {
-  concatCanvas.value.paintCanvas.setPaintMode(mode);
-};
-
-const onChangeColor = (color) => {
-  concatCanvas.value.paintCanvas.setPaintColor(color);
-};
-
-const onChangeBrushSize = (brushSize) => {
-  concatCanvas.value.paintCanvas.setBrushSize(brushSize);
-};
 </script>
 
 <template>
   <publisher-canvas-concat ref="concatCanvas" />
-  <v-text-field type="text" label="Room Name" v-model="roomName" />
-  <v-label>Room ID: {{ roomId }}</v-label>
-  <base-button label="move" @click="paintMode = 'move'" />
-  <base-button label="paint" @click="paintMode = 'paint'" />
-  <base-button label="Create" @click="onClickCreate" :disabled="!hasRoomName" />
-  <base-button label="Leave" @click="onClickLeave" />
-  <publisher-canvas-ctrl
-    @change-mode="onChangeMode"
-    @change-color="onChangeColor"
-    @change-brush-size="onChangeBrushSize"
-  />
-  <comment-column :comments="comments" />
 </template>
 
 <style scoped></style>

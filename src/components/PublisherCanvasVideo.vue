@@ -1,10 +1,10 @@
 <script setup>
-import { onMounted, onUnmounted, ref } from "vue";
+import { inject, onMounted, onUnmounted, ref } from "vue";
 const videoElement = document.createElement("video");
 const videoCanvas = ref(null);
 
-const width = 640;
-const height = 480;
+const canvasWidth = inject("canvasWidth");
+const canvasHeight = inject("canvasHeight");
 const frameRate = 30;
 
 let intervalId;
@@ -18,10 +18,16 @@ onMounted(() => {
 
   const videoCanvasElement = videoCanvas.value;
   const canvasCtx = videoCanvasElement.getContext("2d");
-  videoCanvasElement.width = width;
-  videoCanvasElement.height = height;
+  videoCanvasElement.width = canvasWidth.value;
+  videoCanvasElement.height = canvasHeight.value;
   const drawVideo = () => {
-    canvasCtx.drawImage(videoElement, 0, 0, width, height);
+    canvasCtx.drawImage(
+      videoElement,
+      0,
+      0,
+      canvasWidth.value,
+      canvasHeight.value
+    );
   };
   intervalId = setInterval(drawVideo, 1000 / frameRate);
 });
@@ -36,7 +42,11 @@ defineExpose({
 </script>
 
 <template>
-  <canvas ref="videoCanvas" width="640" height="480"></canvas>
+  <canvas
+    ref="videoCanvas"
+    :width="canvasWidth"
+    :height="canvasHeight"
+  ></canvas>
 </template>
 
 <style scoped></style>

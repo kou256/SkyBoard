@@ -128,14 +128,6 @@ const onClickSubscribe = async () => {
 const onClickLeave = () => {
   context.dispose();
 };
-const onClickSend = async (e) => {
-  const comment = e;
-  if (data) {
-    data.write(comment);
-    // TODO: ちゃんとストリームをSubscribeするようにしたい。
-    comments.value.push(comment);
-  }
-};
 
 onUnmounted(async () => {
   if (room) {
@@ -146,15 +138,6 @@ onUnmounted(async () => {
 
 <template>
   <sky-board-video ref="remoteVideo" />
-  <v-text-field type="text" label="Room Name" v-model="roomName" />
-  <base-button
-    label="Join"
-    @click="onClickSubscribe"
-    :disabled="!hasRoomName"
-  />
-  <base-button label="Leave" @click="onClickLeave" />
-  <comment-column :comments="comments" />
-  <comment-form-send @send="onClickSend" />
 </template>
 
 <style scoped></style>

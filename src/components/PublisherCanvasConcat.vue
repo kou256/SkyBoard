@@ -7,15 +7,21 @@ const canvasStreamTrack = ref(null);
 const videoCanvas = ref(null);
 const paintCanvas = ref(null);
 const imageCanvas = ref(null);
-const width = 640;
-const height = 480;
+const canvasWidth = inject("canvasWidth");
+const canvasHeight = inject("canvasHeight");
 const frameRate = 30;
 const paintMode = inject("paintMode");
 const concatCanvasElement = document.createElement("canvas");
+const canvasWrapper = ref(null);
 
 onMounted(() => {
-  concatCanvasElement.width = width;
-  concatCanvasElement.height = height;
+  const canvasWrapperWidth = canvasWrapper.value.clientWidth;
+  const canvasWrapperHeight = canvasWrapper.value.clientHeight;
+  if (canvasWidth.value > canvasWrapperWidth) {
+  }
+
+  concatCanvasElement.width = canvasWidth.value;
+  concatCanvasElement.height = canvasHeight.value;
 
   setInterval(concat, 1000 / frameRate);
 
@@ -26,7 +32,7 @@ onMounted(() => {
 const concat = () => {
   const concatCanvasCtx = concatCanvasElement.getContext("2d");
   concatCanvasCtx.drawImage(videoCanvas.value.videoCanvas, 0, 0, width, height);
-  if (paintMode.value === "move") {
+  if (paintMode.value === "cursor") {
     imageCanvas.value.imageCanvas.style.zIndex = "2";
     paintCanvas.value.paintCanvas.style.zIndex = "1";
   } else if (paintMode.value === "paint") {
@@ -44,7 +50,10 @@ defineExpose({
 </script>
 
 <template>
-  <div class="canvas-wrapper">
+  <div
+    ref="canvasWrapper"
+    class="canvas-wrapper h-100 w-100 d-flex justify-center align-content-center"
+  >
     <publisher-canvas-video ref="videoCanvas" />
     <publisher-canvas-paint ref="paintCanvas" />
     <publisher-canvas-image ref="imageCanvas" />
@@ -54,13 +63,12 @@ defineExpose({
 <style scoped>
 .canvas-wrapper {
   position: relative;
-  width: 640px;
-  height: 480px;
 }
 
 .canvas-wrapper > canvas {
   position: absolute;
-  top: 0;
-  left: 0;
+  margin: auto;
+  //top: 0;
+  //left: 0;
 }
 </style>
