@@ -1,95 +1,51 @@
 <script setup>
-import SkyBoardVideo from "./SkyBoardVideo.vue";
-import { computed, inject, onMounted, onUnmounted, ref } from "vue";
+import { inject, onMounted, onUnmounted, ref } from "vue";
 import { joinRoom, publishComment } from "../js/module/skyway.js";
 
-const roomName = inject("roomName");
-const hasRoomName = computed(() => roomName.value.length > 0);
+const video = ref(null);
+const videoWidth = inject("canvasWidth");
+const videoHeight = inject("canvasHeight");
 
-const remoteVideo = ref(null);
-const comments = ref([]);
+const roomName = inject("roomName");
 const emits = defineEmits(["send"]);
+let me = null;
+let room = null;
 
 const startSubscription = async () => {
-  const ret = await joinRoom(roomName.value);
-  console.log(ret);
-  // context = await SkyWayContext.Create(skyWayToken);
-  //
-  // room = await SkyWayRoom.Find(
-  //   context,
-  //   {
-  //     name: roomName.value,
-  //   },
-  //   "p2p"
-  // );
-  // me = await room.join();
-  //
-  // room.onStreamPublished.add(async (e) => {
-  //   if (e.publication.contentType === "data") {
-  //     const { stream } = await me.subscribe(e.publication.id);
-  //     if (stream) {
-  //       stream.onData.add((comment) => {
-  //         comments.value.push(comment);
-  //       });
-  //     }
-  //   }
-  // });
-  //
-  // data = await SkyWayStreamFactory.createDataStream(context);
-  // await me.publish(data);
-  //
-  // let subscribedVideo = false;
-  // let subscribedAudio = false;
-  // for (const publication of room.publications.filter((publication) => {
-  //   return publication.publisher.id !== me.id;
-  // })) {
-  //   if (publication.state === "enabled") {
-  //     try {
-  //       const { stream } = await me.subscribe(publication.id);
-  //       if (publication.contentType === "video" && !subscribedVideo) {
-  //         stream.attach(remoteVideo.value.video);
-  //         subscribedVideo = true;
-  //       } else if (publication.contentType === "audio" && !subscribedAudio) {
-  //         stream.attach(remoteVideo.value.video);
-  //         subscribedAudio = true;
-  //       } else if (publication.contentType === "data") {
-  //         stream.onData.add((comment) => {
-  //           comments.value.push(comment);
-  //         });
-  //       }
-  //     } catch (e) {
-  //       console.error(e, publication);
-  //     }
-  //   }
-  // }
-};
-
-onMounted(async () => {
-  const { me, room, streams } = await joinRoom(roomName.value);
+  const { user, joinedRoom, streams } = await joinRoom(roomName.value);
+  me = user;
+  room = joinedRoom;
 
   for (const stream of streams) {
     if (stream.contentType === "video") {
-      stream.attach(remoteVideo.value.video);
+      stream.attach(video.value);
     } else if (stream.contentType === "audio") {
-      stream.attach(remoteVideo.value.video);
+      stream.attach(video.value);
     } else if (stream.contentType === "data") {
       stream.onData.add((comment) => {
         emits("send", comment);
       });
     }
   }
+};
+
+onMounted(async () => {
+  await startSubscription();
   await publishComment("");
 });
 
 onUnmounted(async () => {
-  // if (room) {
-  //   await room.leave();
-  // }
+  if (me) {
+    await me.leave();
+  }
+  if (room) {
+    await room.leave();
+  }
 });
 </script>
 
 <template>
-  <sky-board-video ref="remoteVideo" />
+  <video ref="video" :width="videoWidth" :height="videoHeight" autoplay></video>
 </template>
 
 <style scoped></style>

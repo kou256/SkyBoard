@@ -29,7 +29,7 @@ const onSendComment = (comment) => {
 const onResizeWindow = () => {
   const widthRatio = canvasParent.value.clientWidth / canvasWidth.value;
   const heightRatio = canvasParent.value.clientHeight / canvasHeight.value;
-  if (widthRatio > heightRatio) {
+  if (widthRatio < heightRatio) {
     canvasWidth.value = canvasParent.value.clientWidth;
     canvasHeight.value = canvasHeight.value * widthRatio;
   } else {
@@ -41,6 +41,8 @@ const onResizeWindow = () => {
 const onClickJoin = (inputRoomName) => {
   roomName.value = inputRoomName;
   roomType.value = "subscriber";
+
+  onResizeWindow();
 };
 
 const canvasParent = ref(null);
