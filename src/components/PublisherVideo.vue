@@ -16,7 +16,12 @@ const startPublication = async () => {
     const audio = await SkyWayStreamFactory.createMicrophoneAudioStream();
     const video = new LocalVideoStream(concatCanvas.value.canvasStreamTrack);
 
-    await createRoom(roomName.value, audio, video);
+    try {
+      await createRoom(roomName.value, audio, video);
+    } catch (e) {
+      console.log(e);
+    }
+
 
     roomId.value = room.id;
     room.onStreamPublished.add(async (e) => {
@@ -32,7 +37,7 @@ const startPublication = async () => {
       }
     });
   }
-};
+}
 
 onMounted(() => {
   startPublication();

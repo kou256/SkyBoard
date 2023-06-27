@@ -8,6 +8,7 @@ const hasRoomName = computed(() => roomName.value.length > 0);
 
 const remoteVideo = ref(null);
 const comments = ref([]);
+const emits = defineEmits(["send"]);
 
 const startSubscription = async () => {
   const ret = await joinRoom(roomName.value);
@@ -65,15 +66,19 @@ const startSubscription = async () => {
 
 onMounted(async () => {
   const { me, room, streams } = await joinRoom(roomName.value);
-  console.log(room);
 
   for (const stream of streams) {
     if (stream.contentType === "video") {
       stream.attach(remoteVideo.value.video);
     } else if (stream.contentType === "audio") {
       stream.attach(remoteVideo.value.video);
+    } else if (stream.contentType === "data") {
+      stream.onData.add((comment) => {
+        emits("send", comment);
+      });
     }
   }
+  await publishComment("");
 });
 
 onUnmounted(async () => {

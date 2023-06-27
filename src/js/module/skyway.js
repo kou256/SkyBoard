@@ -71,7 +71,7 @@ export async function createRoom(
 
   context = await SkyWayContext.Create(skyWayToken);
 
-  room = await SkyWayRoom.Create(context, {
+  room = await SkyWayRoom.FindOrCreate(context, {
     type: "p2p",
     name: roomName,
   });
@@ -158,9 +158,9 @@ export async function publishComment(comment) {
   if (!dataStream) {
     dataStream = await SkyWayStreamFactory.createDataStream(context);
     await me.publish(dataStream);
-    console.log(dataStream);
     return;
   }
+  if (comment.length === 0) return;
   await dataStream.write(comment);
 }
 

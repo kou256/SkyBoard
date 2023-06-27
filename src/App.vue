@@ -94,7 +94,7 @@ const onUpdateFiles = (loadedFiles) => {
                 v-if="roomType === 'publisher'"
                 @send="onSendComment"
               />
-              <subscriber-view v-if="roomType === 'subscriber'" />
+              <subscriber-view v-if="roomType === 'subscriber'" @send="onSendComment"/>
             </div>
           </v-sheet>
         </v-col>
