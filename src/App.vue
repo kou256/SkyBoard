@@ -6,9 +6,17 @@ import { computed, onMounted, provide, readonly, ref } from "vue";
 import CommentColumn from "./components/CommentColumn.vue";
 import PublisherCanvasCtrl from "./components/PublisherCanvasCtrl.vue";
 import SubscriberCtrl from "./components/SubscriberCtrl.vue";
+import { getFunctions, httpsCallable } from "firebase/functions";
 
-onMounted(() => {
+const functions = getFunctions();
+const fetchSkyWayToken = httpsCallable(functions, 'fetchSkyWayToken');
+const skyWayToken = ref("");
+provide("skyWayToken", readonly(skyWayToken));
+
+onMounted(async () => {
   window.addEventListener("resize", onResizeWindow);
+  const res = await fetchSkyWayToken();
+  skyWayToken.value = res.data.token;
 });
 
 const roomName = ref("");

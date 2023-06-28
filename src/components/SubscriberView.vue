@@ -6,13 +6,14 @@ const video = ref(null);
 const videoWidth = inject("canvasWidth");
 const videoHeight = inject("canvasHeight");
 
+const skyWayToken = inject("skyWayToken");
 const roomName = inject("roomName");
 const emits = defineEmits(["send"]);
 let me = null;
 let room = null;
 
 const startSubscription = async () => {
-  const { user, joinedRoom, streams } = await joinRoom(roomName.value);
+  const { user, joinedRoom, streams } = await joinRoom(skyWayToken.value, roomName.value);
   me = user;
   room = joinedRoom;
 

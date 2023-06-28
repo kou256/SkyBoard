@@ -8,6 +8,7 @@ const concatCanvas = ref(null);
 
 const emits = defineEmits(["send"]);
 
+const skyWayToken = inject("skyWayToken");
 const roomId = ref("None");
 const roomName = inject("roomName");
 
@@ -17,7 +18,7 @@ const startPublication = async () => {
     const video = new LocalVideoStream(concatCanvas.value.canvasStreamTrack);
 
     try {
-      await createRoom(roomName.value, audio, video);
+      await createRoom(skyWayToken.value, roomName.value, audio, video);
     } catch (e) {
       console.log(e);
     }
