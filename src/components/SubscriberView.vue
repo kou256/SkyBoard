@@ -1,135 +1,44 @@
 <script setup>
-import SkyBoardVideo from "./SkyBoardVideo.vue";
-import BaseButton from "./BaseButton.vue";
-import CommentFormSend from "./CommentFormSend.vue";
-import CommentColumn from "./CommentColumn.vue";
-import { computed, inject, onMounted, onUnmounted, ref } from "vue";
-import {
-  nowInSec,
-  SkyWayAuthToken,
-  SkyWayContext,
-  SkyWayRoom,
-  SkyWayStreamFactory,
-  uuidV4,
-} from "@skyway-sdk/room";
+import { inject, onMounted, onUnmounted, ref } from "vue";
+import { joinRoom, publishComment } from "../js/module/skyway.js";
 
-const roomName = ref("");
-let room;
-let me;
-const hasRoomName = computed(() => roomName.value.length > 0);
+const video = ref(null);
+const videoWidth = inject("canvasWidth");
+const videoHeight = inject("canvasHeight");
 
-const skyWayToken = new SkyWayAuthToken({
-  jti: uuidV4(),
-  iat: nowInSec(),
-  exp: nowInSec() + 60 * 60 * 24,
-  scope: {
-    app: {
-      id: import.meta.env.VITE_SKYWAY_APP_ID,
-      turn: true,
-      actions: ["read"],
-      channels: [
-        {
-          id: "*",
-          name: "*",
-          actions: ["write"],
-          members: [
-            {
-              id: "*",
-              name: "*",
-              actions: ["write"],
-              publication: {
-                actions: ["write"],
-              },
-              subscription: {
-                actions: ["write"],
-              },
-            },
-          ],
-          sfuBots: [
-            {
-              actions: ["write"],
-              forwardings: [
-                {
-                  actions: ["write"],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  },
-}).encode(import.meta.env.VITE_SKYWAY_SECRET_KEY);
-const remoteVideo = ref(null);
-const comments = ref([]);
-let context;
-let data;
+const skyWayToken = inject("skyWayToken");
+const roomName = inject("roomName");
+const emits = defineEmits(["send"]);
+let me = null;
+let room = null;
 
 const startSubscription = async () => {
-  context = await SkyWayContext.Create(skyWayToken);
+  const { user, joinedRoom, streams } = await joinRoom(skyWayToken.value, roomName.value);
+  me = user;
+  room = joinedRoom;
 
-  room = await SkyWayRoom.Find(
-    context,
-    {
-      name: roomName.value,
-    },
-    "p2p"
-  );
-  me = await room.join();
-
-  room.onStreamPublished.add(async (e) => {
-    if (e.publication.contentType === "data") {
-      const { stream } = await me.subscribe(e.publication.id);
-      if (stream) {
-        stream.onData.add((comment) => {
-          comments.value.push(comment);
-        });
-      }
-    }
-  });
-
-  data = await SkyWayStreamFactory.createDataStream(context);
-  await me.publish(data);
-
-  let subscribedVideo = false;
-  let subscribedAudio = false;
-  for (const publication of room.publications.filter((publication) => {
-    return publication.publisher.id !== me.id;
-  })) {
-    if (publication.state === "enabled") {
-      try {
-        const { stream } = await me.subscribe(publication.id);
-        if (publication.contentType === "video" && !subscribedVideo) {
-          stream.attach(remoteVideo.value.video);
-          subscribedVideo = true;
-        } else if (publication.contentType === "audio" && !subscribedAudio) {
-          stream.attach(remoteVideo.value.video);
-          subscribedAudio = true;
-        } else if (publication.contentType === "data") {
-          stream.onData.add((comment) => {
-            comments.value.push(comment);
-          });
-        }
-      } catch (e) {
-        console.error(e, publication);
-      }
+  for (const stream of streams) {
+    if (stream.contentType === "video") {
+      stream.attach(video.value);
+    } else if (stream.contentType === "audio") {
+      stream.attach(video.value);
+    } else if (stream.contentType === "data") {
+      stream.onData.add((comment) => {
+        emits("send", comment);
+      });
     }
   }
 };
 
-onMounted(() => {
-  // skyWayToken = inject("skyWayToken", null);
+onMounted(async () => {
+  await startSubscription();
+  await publishComment("");
 });
 
-const onClickSubscribe = async () => {
-  await startSubscription();
-};
-
-const onClickLeave = () => {
-  context.dispose();
-};
-
 onUnmounted(async () => {
+  if (me) {
+    await me.leave();
+  }
   if (room) {
     await room.leave();
   }
@@ -137,7 +46,7 @@ onUnmounted(async () => {
 </script>
 
 <template>
-  <sky-board-video ref="remoteVideo" />
+  <video ref="video" :width="videoWidth" :height="videoHeight" autoplay></video>
 </template>
 
 <style scoped></style>

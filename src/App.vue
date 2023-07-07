@@ -2,74 +2,42 @@
 import RoomDialogEnter from "./components/RoomDialogEnter.vue";
 import PublisherVideo from "./components/PublisherVideo.vue";
 import SubscriberView from "./components/SubscriberView.vue";
-import { nowInSec, SkyWayAuthToken, uuidV4 } from "@skyway-sdk/room";
 import { computed, onMounted, provide, readonly, ref } from "vue";
 import CommentColumn from "./components/CommentColumn.vue";
 import PublisherCanvasCtrl from "./components/PublisherCanvasCtrl.vue";
-import BaseButton from "./components/BaseButton.vue";
 import SubscriberCtrl from "./components/SubscriberCtrl.vue";
-import CommentFormSend from "./components/CommentFormSend.vue";
-const skyWayToken = new SkyWayAuthToken({
-  jti: uuidV4(),
-  iat: nowInSec(),
-  exp: nowInSec() + 60 * 60 * 24,
-  scope: {
-    app: {
-      id: import.meta.env.VITE_SKYWAY_APP_ID,
-      turn: true,
-      actions: ["read"],
-      channels: [
-        {
-          id: "*",
-          name: "*",
-          actions: ["write"],
-          members: [
-            {
-              id: "*",
-              name: "*",
-              actions: ["write"],
-              publication: {
-                actions: ["write"],
-              },
-              subscription: {
-                actions: ["write"],
-              },
-            },
-          ],
-          sfuBots: [
-            {
-              actions: ["write"],
-              forwardings: [
-                {
-                  actions: ["write"],
-                },
-              ],
-            },
-          ],
-        },
-      ],
-    },
-  },
-}).encode(import.meta.env.VITE_SKYWAY_SECRET_KEY);
+import { getFunctions, httpsCallable } from "firebase/functions";
 
-onMounted(() => {
-  provide("skyWayToken", skyWayToken);
+const functions = getFunctions();
+const fetchSkyWayToken = httpsCallable(functions, 'fetchSkyWayToken');
+const skyWayToken = ref("");
+provide("skyWayToken", readonly(skyWayToken));
+
+onMounted(async () => {
   window.addEventListener("resize", onResizeWindow);
+  const res = await fetchSkyWayToken();
+  skyWayToken.value = res.data.token;
 });
 
 const roomName = ref("");
 const roomType = ref("");
+const comments = ref([]);
 provide("roomName", readonly(roomName));
+provide("comments", readonly(comments));
 const onClickCreate = (inputRoomName) => {
   roomName.value = inputRoomName;
   roomType.value = "publisher";
 
   onResizeWindow();
 };
+const onSendComment = (comment) => {
+  console.log(comment);
+  comments.value.push(comment);
+};
 const onResizeWindow = () => {
   const widthRatio = canvasParent.value.clientWidth / canvasWidth.value;
   const heightRatio = canvasParent.value.clientHeight / canvasHeight.value;
-  if (widthRatio > heightRatio) {
+  if (widthRatio < heightRatio) {
     canvasWidth.value = canvasParent.value.clientWidth;
     canvasHeight.value = canvasHeight.value * widthRatio;
   } else {
@@ -81,6 +49,8 @@ const onResizeWindow = () => {
 const onClickJoin = (inputRoomName) => {
   roomName.value = inputRoomName;
   roomType.value = "subscriber";
+
+  onResizeWindow();
 };
 
 const canvasParent = ref(null);
@@ -130,8 +100,11 @@ const onUpdateFiles = (loadedFiles) => {
         <v-col cols="8">
           <v-sheet class="h-100" color="#000000" @resize="onResizeWindow">
             <div ref="canvasParent" class="h-100 w-100">
-              <publisher-video v-if="roomType === 'publisher'" />
-              <subscriber-view v-if="roomType === 'subscriber'" />
+              <publisher-video
+                v-if="roomType === 'publisher'"
+                @send="onSendComment"
+              />
+              <subscriber-view v-if="roomType === 'subscriber'" @send="onSendComment"/>
             </div>
           </v-sheet>
         </v-col>
