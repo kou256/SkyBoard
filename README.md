@@ -4,6 +4,14 @@
 - 詳細は[Qiitaの記事](https://qiita.com/KOU256/items/2d9dc37f55dae68be7b4)でも説明しています
 - アプリケーションは[こちら](https://skyboard-9bf56.web.app/)で公開しています
 
+## ディレクトリ構成
+- `src`: 基本的なソースコードを管理しているディレクトリ
+    - `assets/`: ソースコードから参照する画像ファイルなどソースコード以外のファイルを管理している
+    - `components/`: Vue.jsのコンポーネントを管理している
+    - `js/module/`: JavaScriptの処理を記述したファイルを管理している
+- `public`: 公開する必要があるがソースコードから参照されていないファイルを管理している
+- `functions`: Firebase Functionsに関するファイルを管理しているディレクトリ
+
 ## 動作環境
 - 開発はNode.js 18.18.0で行ったため，このバージョン以上が導入されていることを前提としています
 - Node.jsのインストールについては[asdf](https://asdf-vm.com/guide/getting-started.html)や[Volta](https://docs.volta.sh/guide/getting-started)などを使用すると良いと思います
