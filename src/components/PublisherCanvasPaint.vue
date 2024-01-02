@@ -75,9 +75,9 @@ watch(
 
 const setPaintMode = (newMode) => {
   const canvasCtx = paintCanvas.value.getContext("2d");
-  if (newMode === "paint") {
+  if (newMode.value === "paint") {
     canvasCtx.globalCompositeOperation = "source-over";
-  } else if (newMode === "erase") {
+  } else if (newMode.value === "erase") {
     canvasCtx.globalCompositeOperation = "destination-out";
   }
 };
